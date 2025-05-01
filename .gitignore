@@ -1,0 +1,10 @@
+# Visual Studio
+.vs/
+
+# Artefactos de compilación
+bin/
+obj/
+
+# Archivos de usuario
+*.user
+*.suo
