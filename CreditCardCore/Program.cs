@@ -1,41 +1,60 @@
+﻿using Core.Library.Data;
+using Core.Library.DataStructures;
+using Core.Library.Models;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Hosting;
+
+
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// ———————– Carga de datos ———————–
+var clientes = JsonLoader.CargarClientes();
+Console.WriteLine($"⚙️  Cargados {clientes.Count} clientes");
+
+var transacciones = JsonLoader.CargarTransacciones();
+Console.WriteLine($"⚙️  Cargadas {transacciones.Count} transacciones");
+
+// Poblamos la lista enlazada de Transacciones
+var listaMovimientos = new SinglyLinkedList<Transaccion>();
+foreach (var t in transacciones)
 {
-    app.MapOpenApi();
+    listaMovimientos.AddLast(t);
 }
+Console.WriteLine($"👉 Movimientos en lista enlazada: {listaMovimientos.Count}");
+// ————————————————————————————————
 
-app.UseHttpsRedirection();
+// Prueba de pila: historial reciente (últimas 2 transacciones)
+var pilaReciente = new Core.Library.DataStructures.Stack<Transaccion>();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+foreach (var t in transacciones)
+    pilaReciente.Push(t);
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+// Veamos el tope y cuántos hay
+Console.WriteLine($"🗂️  1er elemento de la pila: {pilaReciente.Peek().Id}");
+Console.WriteLine($"🗂️  Tamaño de la pila: {pilaReciente.Count}");
 
+// ———————– Prueba de cola: procesamiento FIFO ———————–
+var colaPendientes = new Core.Library.DataStructures.Queue<Transaccion>();
+foreach (var t in transacciones)
+    colaPendientes.Enqueue(t);
+
+// Veamos el primer elemento sin sacarlo
+Console.WriteLine($"⏳ Primer en cola: {colaPendientes.Peek().Id}");
+Console.WriteLine($"⏳ Tamaño de la cola: {colaPendientes.Count}");
+
+// Sacamos uno y mostramos el nuevo tope
+var procesado = colaPendientes.Dequeue();
+Console.WriteLine($"✅ Procesado: {procesado.Id}");
+Console.WriteLine($"⏳ Nuevo tope en cola: {colaPendientes.Peek().Id}");
+Console.WriteLine($"⏳ Tamaño restante: {colaPendientes.Count}");
+// ————————————————————————————————————————————————
+
+// ———————– Endpoints ———————–
+app.MapGet("/api/clientes", () => clientes);
+app.MapGet("/api/transacciones", () => transacciones);
+app.MapGet("/api/movimientos", () => listaMovimientos);
+// ———————————————————————————
+
+// Ejecuta la aplicación
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

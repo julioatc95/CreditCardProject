@@ -1,0 +1,14 @@
+[
+    {
+        "Id": "C1",
+        "Nombre": "Juan Pérez",
+        "Direccion": "Calle Falsa 123",
+        "Email": "juan.perez@ejemplo.com"
+    },
+    {
+        "Id": "C2",
+        "Nombre": "Ana Gómez",
+        "Direccion": "Av. Siempre Viva 742",
+        "Email": "ana.gomez@ejemplo.com"
+    }
+]

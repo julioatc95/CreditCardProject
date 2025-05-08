@@ -3,16 +3,17 @@ namespace Core.Library.Models
 {
     public class Tarjeta
     {
-        //Identificador unico de tarjeta
-        public string id { get; set; }
+        public string Id { get; set; } = default!;
 
-        //Relacion al cliente (Cliente.Id)
-        public string ClienteId { get; set; }
-        public string Numero { get; set; }
-        public string Pin { get; set; }
+        public string ClienteId { get; set; } = default!;
+
+        public required string Numero { get; set; }
+
+        public required string Pin { get; set; }
 
         public DateTime FechaExpiracion { get; set; }
         public decimal Saldo { get; set; }
     }
+
 
 }
