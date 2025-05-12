@@ -78,6 +78,17 @@ bstClientes.Remove(clientes[0].Id);
 Console.WriteLine("🌳 Después de eliminar: " + string.Join(", ", bstClientes));
 // ——————————————————————————————————————————————
 
+// ———————– Prueba de AVL: balance de IDs ———————–
+var avl = new AvlTree<string>();
+foreach (var c in clientes)
+    avl.Insert(c.Id);
+
+Console.WriteLine("🌲 IDs en AVL ordenado: " + string.Join(", ", avl));
+// Inserta un tercer ID para forzar rotaciones (si tienes solo 2, añade uno manual)
+avl.Insert("C3");
+Console.WriteLine("🌲 Después de añadir C3: " + string.Join(", ", avl));
+// ——————————————————————————————————————————————
+
 
 // ———————– Endpoints ———————–
 app.MapGet("/api/clientes", () => clientes);
