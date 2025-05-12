@@ -66,6 +66,19 @@ tablaClientes.Remove(primerId);
 Console.WriteLine($"❌ Eliminado {primerId}, Count ahora = {tablaClientes.Count}");
 // ——————————————————————————————————————————————
 
+// ———————– Prueba de BST: IDs de clientes en orden ———————–
+var bstClientes = new BinarySearchTree<string>();
+foreach (var c in clientes)
+    bstClientes.Insert(c.Id);
+
+Console.WriteLine("🌳 IDs de clientes en orden: " + string.Join(", ", bstClientes));
+
+Console.WriteLine($"🌳 Contiene {clientes[0].Id}? {bstClientes.Contains(clientes[0].Id)}");
+bstClientes.Remove(clientes[0].Id);
+Console.WriteLine("🌳 Después de eliminar: " + string.Join(", ", bstClientes));
+// ——————————————————————————————————————————————
+
+
 // ———————– Endpoints ———————–
 app.MapGet("/api/clientes", () => clientes);
 app.MapGet("/api/transacciones", () => transacciones);
