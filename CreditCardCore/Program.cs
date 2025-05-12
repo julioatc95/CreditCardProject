@@ -50,6 +50,22 @@ Console.WriteLine($"⏳ Nuevo tope en cola: {colaPendientes.Peek().Id}");
 Console.WriteLine($"⏳ Tamaño restante: {colaPendientes.Count}");
 // ————————————————————————————————————————————————
 
+// ———————– Prueba de HashTable: clientes por Id ———————–
+var tablaClientes = new HashTable<string, Cliente>();
+foreach (var c in clientes)
+    tablaClientes.Add(c.Id, c);
+
+// Probamos TryGetValue
+if (tablaClientes.TryGetValue(clientes[0].Id, out var cli))
+    Console.WriteLine($"🔍 Cliente recuperado: {cli.Nombre} ({cli.Id})");
+
+// Test del indexer y eliminación
+var primerId = clientes[0].Id;
+Console.WriteLine($"🔑 Indexer: {tablaClientes[primerId].Email}");
+tablaClientes.Remove(primerId);
+Console.WriteLine($"❌ Eliminado {primerId}, Count ahora = {tablaClientes.Count}");
+// ——————————————————————————————————————————————
+
 // ———————– Endpoints ———————–
 app.MapGet("/api/clientes", () => clientes);
 app.MapGet("/api/transacciones", () => transacciones);
