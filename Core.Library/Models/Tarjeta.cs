@@ -3,15 +3,16 @@ namespace Core.Library.Models
 {
     public class Tarjeta
     {
-        public string Id { get; set; } = default!;
+        public string Id { get; set; } = string.Empty;
 
-        public string ClienteId { get; set; } = default!;
+        public string ClienteId { get; set; } = string.Empty;
 
-        public required string Numero { get; set; }
+        public string Numero { get; set; } = string.Empty;
 
-        public required string Pin { get; set; }
+        public string Pin { get; set; } = string.Empty;
 
         public DateTime FechaExpiracion { get; set; }
+
         public decimal Saldo { get; set; }
     }
 

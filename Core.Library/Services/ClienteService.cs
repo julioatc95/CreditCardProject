@@ -7,37 +7,6 @@ using Core.Library.Models;
 namespace Core.Library.Services
 {
     /// <summary>
-    /// Interfaz que define operaciones CRUD para Cliente.
-    /// </summary>
-    public interface IClienteService
-    {
-        /// <summary>
-        /// Obtiene todos los clientes.
-        /// </summary>
-        IEnumerable<Cliente> ObtenerTodos();
-
-        /// <summary>
-        /// Obtiene un cliente por su identificador.
-        /// </summary>
-        Cliente? ObtenerPorId(string id);
-
-        /// <summary>
-        /// Crea un nuevo cliente.
-        /// </summary>
-        void Crear(Cliente cliente);
-
-        /// <summary>
-        /// Actualiza un cliente existente. Devuelve true si existe y se actualiza.
-        /// </summary>
-        bool Actualizar(string id, Cliente cliente);
-
-        /// <summary>
-        /// Elimina un cliente por su identificador. Devuelve true si se eliminó.
-        /// </summary>
-        bool Eliminar(string id);
-    }
-
-    /// <summary>
     /// Implementación de IClienteService usando HashTable para almacenamiento en memoria.
     /// </summary>
     public class ClienteService : IClienteService

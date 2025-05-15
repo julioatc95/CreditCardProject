@@ -1,0 +1,19 @@
+
+[
+    {
+        "Id": "T1",
+        "ClienteId": "C1",
+        "Numero": "1234",
+        "Pin": "0000",
+        "FechaExpiracion": "2026-01-01",
+        "Saldo": 500
+    },
+    {
+        "Id": "T2",
+        "ClienteId": "C2",
+        "Numero": "5678",
+        "Pin": "1111",
+        "FechaExpiracion": "2026-06-01",
+        "Saldo": 300
+    }
+]
