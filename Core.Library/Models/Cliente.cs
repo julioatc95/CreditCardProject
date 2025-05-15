@@ -2,13 +2,10 @@
 {
     public class Cliente
     {
-        // Identificador único del cliente
-        public string Id { get; set; }
-
-        public string Nombre { get; set; }
-
-        public string Direccion { get; set; }
-
-        public string Email { get; set; }
+        public required string Id { get; set; }
+        public required string Nombre { get; set; }
+        public required string Direccion { get; set; }
+        public required string Email { get; set; }
+        // …
     }
 }
