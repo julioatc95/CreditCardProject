@@ -1,73 +1,138 @@
 ﻿using System;
 using System.Collections.Generic;
-using Core.Library.DataStructures;
+using System.Linq;
 using Core.Library.Models;
+using Core.Library.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CreditCardCore.Controllers
 {
-    /// <summary>
-    /// Interfaz que define operaciones CRUD para Tarjeta.
-    /// </summary>
-    public interface ITarjetaService
+    [ApiController]
+    [Route("api/[controller]")]
+    public class TarjetasController : ControllerBase
     {
-        IEnumerable<Tarjeta> ObtenerTodas();
-        Tarjeta? ObtenerPorId(string id);
-        void Crear(Tarjeta tarjeta);
-        bool Actualizar(string id, Tarjeta tarjeta);
-        bool Eliminar(string id);
-    }
+        private readonly ITarjetaService _tarjetaSvc;
+        private readonly ITransaccionService _txSvc;
 
-    /// <summary>
-    /// Implementación de ITarjetaService usando HashTable para almacenamiento en memoria.
-    /// </summary>
-    public class TarjetaService : ITarjetaService
-    {
-        private readonly HashTable<string, Tarjeta> _tabla;
-
-        public TarjetaService(IEnumerable<Tarjeta> tarjetasIniciales)
+        public TarjetasController(
+            ITarjetaService tarjetaSvc,
+            ITransaccionService txSvc)
         {
-            _tabla = new HashTable<string, Tarjeta>();
-            foreach (var t in tarjetasIniciales)
+            _tarjetaSvc = tarjetaSvc;
+            _txSvc = txSvc;
+        }
+
+        // --- Aquí pegas tus endpoints personalizados ---
+
+        // 1) Saldo actual de la tarjeta
+        [HttpGet("{id}/saldo")]
+        public ActionResult<decimal> GetSaldo(string id)
+        {
+            var tarjeta = _tarjetaSvc.ObtenerPorId(id);
+            if (tarjeta == null) return NotFound();
+
+            var movs = _txSvc.ObtenerTodas()
+                             .Where(tx => tx.TarjetaId == id);
+            var saldo = movs.Sum(tx => tx.Monto);
+            return Ok(saldo);
+        }
+
+        // 2) Lista de movimientos de una tarjeta
+        [HttpGet("{id}/movimientos")]
+        public ActionResult<IEnumerable<Transaccion>> GetMovimientos(string id)
+        {
+            if (_tarjetaSvc.ObtenerPorId(id) == null) return NotFound();
+
+            var movs = _txSvc.ObtenerTodas()
+                             .Where(tx => tx.TarjetaId == id);
+            return Ok(movs);
+        }
+
+        // 3) Registrar un pago (Monto negativo)
+        [HttpPost("{id}/pago")]
+        public ActionResult Pagar(string id, [FromBody] decimal monto)
+        {
+            var tarjeta = _tarjetaSvc.ObtenerPorId(id);
+            if (tarjeta == null) return NotFound();
+
+            var tx = new Transaccion
             {
-                _tabla.Add(t.Id, t);
-            }
+                Id = Guid.NewGuid().ToString(),
+                TarjetaId = id,
+                Tipo = TipoTransaccion.Pago,
+                Descripcion = "Pago manual",
+                Fecha = DateTime.UtcNow,
+                Monto = -Math.Abs(monto)
+            };
+            _txSvc.Crear(tx);
+            return CreatedAtAction(nameof(GetMovimientos), new { id }, tx);
         }
 
-        public IEnumerable<Tarjeta> ObtenerTodas()
+        // 4) Registrar un consumo (Monto positivo)
+        [HttpPost("{id}/consumo")]
+        public ActionResult Consumir(string id, [FromBody] decimal monto)
         {
-            // Recorre cada par (KeyValuePair) y devuelve solo el valor (Tarjeta)
-            foreach (var kv in _tabla)
-                yield return kv.Value;
+            var tarjeta = _tarjetaSvc.ObtenerPorId(id);
+            if (tarjeta == null) return NotFound();
+
+            var tx = new Transaccion
+            {
+                Id = Guid.NewGuid().ToString(),
+                TarjetaId = id,
+                Tipo = TipoTransaccion.Consumo,
+                Descripcion = "Consumo manual",
+                Fecha = DateTime.UtcNow,
+                Monto = Math.Abs(monto)
+            };
+            _txSvc.Crear(tx);
+            return CreatedAtAction(nameof(GetMovimientos), new { id }, tx);
         }
 
-        public Tarjeta? ObtenerPorId(string id)
+        // 5) Cambio de PIN
+        [HttpPost("{id}/pin")]
+        public ActionResult CambiarPin(string id, [FromBody] string nuevoPin)
         {
-            // Devuelve la tarjeta si existe, o null si no
-            return _tabla.TryGetValue(id, out var tarjeta) ? tarjeta : null;
+            var tarjeta = _tarjetaSvc.ObtenerPorId(id);
+            if (tarjeta == null) return NotFound();
+
+            tarjeta.Pin = nuevoPin;
+            _tarjetaSvc.Actualizar(id, tarjeta);
+            return NoContent();
         }
 
-        public void Crear(Tarjeta tarjeta)
+        // 6) Bloqueo temporal
+        [HttpPost("{id}/bloquear")]
+        public ActionResult Bloquear(string id)
         {
-            // Evita duplicados
-            if (_tabla.TryGetValue(tarjeta.Id, out _))
-                throw new ArgumentException($"Ya existe tarjeta con Id '{tarjeta.Id}'.");
-            _tabla.Add(tarjeta.Id, tarjeta);
+            var tarjeta = _tarjetaSvc.ObtenerPorId(id);
+            if (tarjeta == null) return NotFound();
+
+            // Si añades un flag Locked en el modelo, aquí lo ajustarías
+            return NoContent();
         }
 
-        public bool Actualizar(string id, Tarjeta tarjeta)
+        // 7) Solicitud de aumento de límite
+        [HttpPost("{id}/limite")]
+        public ActionResult SolicitarAumento(string id, [FromBody] decimal nuevoLimite)
         {
-            // Solo actualiza si la tarjeta existe
-            if (!_tabla.TryGetValue(id, out _))
-                return false;
-            _tabla[id] = tarjeta;
-            return true;
+            var tarjeta = _tarjetaSvc.ObtenerPorId(id);
+            if (tarjeta == null) return NotFound();
+
+            // Lógica de solicitud…
+            return Accepted($"Solicitud de aumento a {nuevoLimite} recibida");
         }
 
-        public bool Eliminar(string id)
+        // 8) Renovación de tarjeta
+        [HttpPost("{id}/renovar")]
+        public ActionResult Renovar(string id)
         {
-            // Elimina el par y devuelve si tuvo éxito
-            return _tabla.Remove(id);
+            var tarjeta = _tarjetaSvc.ObtenerPorId(id);
+            if (tarjeta == null) return NotFound();
+
+            tarjeta.FechaExpiracion = tarjeta.FechaExpiracion.AddYears(3);
+            _tarjetaSvc.Actualizar(id, tarjeta);
+            return NoContent();
         }
+        // --- Fin de los endpoints personalizados ---
     }
 }

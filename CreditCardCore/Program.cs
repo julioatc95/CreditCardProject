@@ -9,33 +9,36 @@ using Microsoft.Extensions.Hosting;
 var builder = WebApplication.CreateBuilder(args);
 
 // ——————— 1. Carga de datos iniciales ———————
-var clientesIniciales = JsonLoader.CargarClientes();       // lee clientes.json
-var tarjetasIniciales = JsonLoader.CargarTarjetas();       // lee tarjetas.json
-var transaccionesIniciales = JsonLoader.CargarTransacciones();  // lee transacciones.json
+var clientesIniciales = JsonLoader.CargarClientes();
+var tarjetasIniciales = JsonLoader.CargarTarjetas();
+var transaccionesIniciales = JsonLoader.CargarTransacciones();
 
-// ——————— 2. Registro de servicios en el contenedor DI ———————
-builder.Services.AddSingleton<IClienteService>(new ClienteService(clientesIniciales));
-builder.Services.AddSingleton<ITarjetaService>(new TarjetaService(tarjetasIniciales));
-// Si más adelante creas ITransaccionService, lo registras igual…
+// ——————— 2. Registro de servicios en DI ———————
+builder.Services.AddSingleton<IClienteService>(
+    new ClienteService(clientesIniciales));
+builder.Services.AddSingleton<ITarjetaService>(
+    new TarjetaService(tarjetasIniciales));
+builder.Services.AddSingleton<ITransaccionService>(
+    new TransaccionService(transaccionesIniciales));
 
-// ——————— 3. MVC y Swagger/OpenAPI ———————
-builder.Services.AddControllers();  // discovery de Controllers con [ApiController]
-builder.Services.AddOpenApi();      // Swagger / OpenAPI
+// ——————— 3. Añadimos Controllers y Swagger/OpenAPI ———————
+builder.Services.AddControllers();
+builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
 // ——————— 4. Middlewares ———————
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();         // UI de Swagger en /openapi o /swagger
+    app.MapOpenApi();      // Swagger UI (Development only)
 }
 
 app.UseHttpsRedirection();
 
-app.MapControllers();        // Mapea tus Controllers con rutas [HttpGet], [HttpPost], etc.
+// ——————— 5. Mapeo de Controllers ———————
+app.MapControllers();
 
-// ——————— 5. Minimal API de prueba ———————
-// (solo para ver en consola o devolver la lista enlazada)
+// ——————— 6. Minimal API de prueba (movimientos) ———————
 app.MapGet("/api/movimientos", () =>
 {
     var lista = new SinglyLinkedList<Transaccion>();
